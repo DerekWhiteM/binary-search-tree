@@ -1,16 +1,18 @@
-const prettyPrint = require('./prettyPrint');
-
-class Node {
-    constructor(value) {
-        this.value = value;
-        this.left = null;
-        this.right = null;
-    }
-}
+const Node = require('./Node');
 
 class Tree {
 
     static root = null;
+
+    static balance(node = this.root) {
+        if (!node) return 0;
+        let lh = this.balance(node.left);
+        if (lh === -1) return -1;
+        let rh = this.balance(node.right);
+        if(rh === -1) return -1;
+        if (Math.abs(lh - rh) > 1) return -1;
+        else return Math.max(lh, rh) + 1;
+    }
 
     static buildTree(arr) {
         const dedupedArr = arr.filter((item, index) => arr.indexOf(item) === index);
@@ -58,6 +60,19 @@ class Tree {
 
     }
 
+    static depth(node) {
+        let depth = 0;
+        findRec(this.root, node.value);
+        return depth;
+        
+        function findRec(node, value) {
+            if (node === null || node.value === value) return node;
+            depth++;
+            if (node.value < value) return findRec(node.right, value);
+            return findRec(node.left, value);
+        }
+    }
+
     static find(value) {
 
         return findRec(this.root, value);
@@ -70,50 +85,18 @@ class Tree {
 
     }
 
-    static levelOrder(suppliedFunc) {
-
-        const queue = [];
-        const visited = [];
-        const func = suppliedFunc
-            ? suppliedFunc
-            : pushToVisted
-        traverseRec(this.root);
-        if (!suppliedFunc) return visited;
-
-        function traverseRec(node) {
-            if (!node) { return; }
-            func(node);
-            queue.shift();
-            if (node.left) queue.push(node.left);
-            if (node.right) queue.push(node.right);
-            return traverseRec(queue[0]);
-        }
-
-        function pushToVisted(node) {
-            return visited.push(node.value);
-        }
-
-    }
-
-    static preOrder(suppliedFunc) {
-        const visited = [];
-        const func = suppliedFunc
-            ? suppliedFunc
-            : pushToVisted
-        preOrderRec(this.root);
-        if (!suppliedFunc) return visited;
+    static height(node = this.root) {
         
-        function preOrderRec(node) {
-            if (!node) return;
-            func(node);
-            preOrderRec(node.left);
-            preOrderRec(node.right);
-        }
+        let height = heightRec(node)
+        
+        return height === 0
+            ? height
+            : height - 1;
 
-        function pushToVisted(node) {
-            return visited.push(node.value);
+        function heightRec(node) {
+            if (!node) return 0;
+            return Math.max(heightRec(node.left), heightRec(node.right) + 1);
         }
-
     }
 
     static inOrder(suppliedFunc) {
@@ -129,27 +112,6 @@ class Tree {
             inOrderRec(node.left);
             func(node);
             inOrderRec(node.right);
-        }
-
-        function pushToVisted(node) {
-            return visited.push(node.value);
-        }
-        
-    }
-
-    static postOrder(suppliedFunc) {
-        const visited = [];
-        const func = suppliedFunc
-            ? suppliedFunc
-            : pushToVisted
-        postOrderRec(this.root);
-        if (!suppliedFunc) return visited;
-        
-        function postOrderRec(node) {
-            if (!node) return;
-            postOrderRec(node.left);
-            postOrderRec(node.right);
-            func(node);
         }
 
         function pushToVisted(node) {
@@ -178,55 +140,94 @@ class Tree {
 
     }
 
+    static isBalanced() {
+        return this.balance() > 0
+            ? true
+            : false;
+    }
+
+    static levelOrder(suppliedFunc) {
+
+        const queue = [];
+        const visited = [];
+        const func = suppliedFunc
+            ? suppliedFunc
+            : pushToVisted
+        traverseRec(this.root);
+        if (!suppliedFunc) return visited;
+
+        function traverseRec(node) {
+            if (!node) { return; }
+            func(node);
+            queue.shift();
+            if (node.left) queue.push(node.left);
+            if (node.right) queue.push(node.right);
+            return traverseRec(queue[0]);
+        }
+
+        function pushToVisted(node) {
+            return visited.push(node.value);
+        }
+
+    }
+
+    static postOrder(suppliedFunc) {
+        const visited = [];
+        const func = suppliedFunc
+            ? suppliedFunc
+            : pushToVisted
+        postOrderRec(this.root);
+        if (!suppliedFunc) return visited;
+        
+        function postOrderRec(node) {
+            if (!node) return;
+            postOrderRec(node.left);
+            postOrderRec(node.right);
+            func(node);
+        }
+
+        function pushToVisted(node) {
+            return visited.push(node.value);
+        }
+        
+    }
+
+    static preOrder(suppliedFunc) {
+        const visited = [];
+        const func = suppliedFunc
+            ? suppliedFunc
+            : pushToVisted
+        preOrderRec(this.root);
+        if (!suppliedFunc) return visited;
+        
+        function preOrderRec(node) {
+            if (!node) return;
+            func(node);
+            preOrderRec(node.left);
+            preOrderRec(node.right);
+        }
+
+        function pushToVisted(node) {
+            return visited.push(node.value);
+        }
+
+    }
+
     static print() {
         if (this.root === null) {
             console.log(null);
         } else {
             prettyPrint(this.root);
         }
-    }
-
-    static height(node = this.root) {
-        
-        let height = heightRec(node)
-        
-        return height === 0
-            ? height
-            : height - 1;
-
-        function heightRec(node) {
-            if (!node) return 0;
-            return Math.max(heightRec(node.left), heightRec(node.right) + 1);
+        function prettyPrint(node, prefix = '', isLeft = true) {
+            if (node.right !== null) {
+                prettyPrint(node.right, `${prefix}${isLeft ? '│   ' : '    '}`, false);
+            }
+            console.log(`${prefix}${isLeft ? '└── ' : '┌── '}${node.value}`);
+            if (node.left !== null) {
+                prettyPrint(node.left, `${prefix}${isLeft ? '    ' : '│   '}`, true);
+            }
         }
-    }
-
-    static depth(node) {
-        let depth = 0;
-        findRec(this.root, node.value);
-        return depth;
-        
-        function findRec(node, value) {
-            if (node === null || node.value === value) return node;
-            depth++;
-            if (node.value < value) return findRec(node.right, value);
-            return findRec(node.left, value);
-        }
-    }
-
-    static balance(node = this.root) {
-        if (!node) return 0;
-        let lh = this.balance(node.left);
-        if (lh === -1) return -1;
-        let rh = this.balance(node.right);
-        if(rh === -1) return -1;
-        if (Math.abs(lh - rh) > 1) return -1;
-        else return Math.max(lh, rh) + 1;
-    }
-
-    static isBalanced() {
-        return this.balance() > 0
-            ? true
-            : false;
     }
 
     static rebalance() {

@@ -17,5 +17,4 @@ Tree.insert(103);
 console.log('isBalanced:', Tree.isBalanced());
 
 Tree.rebalance();
-
 Tree.print();
